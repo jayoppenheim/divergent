@@ -1,0 +1,152 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <vector>
+using namespace std;
+
+/************************************************************************/
+/*                                                                      */
+/*   This pseudo code maps the attibutes from a source mesh on to a     */
+/*   destination mesh.                                                  */
+/*                                                                      */
+/************************************************************************/
+
+class Point {
+	public:
+		double x=0,y=0,z=0;
+};
+
+class Node : public Point {
+	public:
+		int id;
+};
+
+class Element {
+	public:
+		int id;
+	        Node* nodes[20];
+		int nodeids[20];
+		void setAttribute(int att) { attribute=att; };
+		int getAttribute() { return attribute; };
+		Point maxcoord,mincoord;
+		Point getCentroid() { return centroid; };
+		virtual bool isPointInside(Point* point) { cout << "base check\n"; return false; };
+		virtual void calculateCentroid() { };
+	protected:
+		Point centroid;
+	private:
+		int attribute=0;
+};
+
+bool isPointOnTop (Node** nodes, Point* point) {
+	// this function returns true if a point is one top of a plane
+	// | ab x ac | to find the plane normal n
+	// ap . n positive means on top
+	return true;
+};
+
+class Tet: public Element {
+	// an element with 4 nodes is assumed to be a tet
+	public:
+		Tet(Node** in_nodes) {
+			// for simplicity, node id and vector index are the same
+			for (int i=0; i < 4; i++) nodes[i] = in_nodes[i];
+			calculateCentroid();
+		}
+		void calculateCentroid() override {
+			// average node location, not exact centroid but close enough for now
+			// TBD: replace with centroid
+			// find max and min box for intermediate inside check
+			centroid.x = (nodes[0]->x)/4;
+			centroid.y = (nodes[0]->y)/4;
+			centroid.z = (nodes[0]->z)/4;
+			for (int i=1; i < 4; i++) {
+				centroid.x += (nodes[i]->x)/4;
+				centroid.y += (nodes[i]->y)/4;
+				centroid.z += (nodes[i]->z)/4;
+			}
+		}
+		bool isPointInside(Point* point) override { 
+			// fill this in with tet inclusion check
+			// TBD use isPointOnTop and loop through element faces
+			return false; 
+		}
+};
+
+class Hex: public Element {
+	// an element with 8 nodes is assumed to be a hex
+	public:
+		Hex(Node** in_nodes) {
+			// for simplicity, node id and vector index are the same
+			for (int i=0; i < 8; i++) nodes[i] = in_nodes[i];
+			calculateCentroid();
+		}
+		void calculateCentroid() override {
+			// average node location, not exact centroid but close enough for now
+			// TBD: replace with centroid
+			centroid.x = (nodes[0]->x)/8;
+			centroid.y = (nodes[0]->y)/8;
+			centroid.z = (nodes[0]->z)/8;
+			for (int i=1; i < 8; i++) {
+				centroid.x += (nodes[i]->x)/8;
+				centroid.y += (nodes[i]->y)/8;
+				centroid.z += (nodes[i]->z)/8;
+			}
+		}
+		bool isPointInside(Point* point) override { 
+			// fill this in with hex inclusion check
+			// TBD use isPointOnTop and loop through element faces
+			return true; 
+		}
+};
+
+int main () {
+
+	vector<Node*> nodesSource, nodesDestination;
+	vector<Element*> elementsSource, elementsDestination;
+
+	//open the source file and populate source nodes and elements, with attribute
+	cout << endl << "Read the Source mesh" << endl << endl;
+	fstream file1("mesh_1.csv", ios::in);
+
+	string line;
+	while(getline(file1,line))
+	{
+		// populate the nodes and elements of the source mesh
+	}
+	
+	//open the destination file and populate destination nodes and elements
+	cout << endl << "Read the Destination mesh" << endl << endl;
+	fstream file2("mesh_2.csv", ios::in);
+	while(getline(file2,line))
+	{
+		// populate the nodes and elements of the destination mesh	u
+	}
+
+	cout << endl << "Start MAPPING" << endl << endl;
+	// reduce the source mesh to only the white elements
+	// (implementation in map.cpp)
+
+	// TBD, reorder the destination mesh by centroid location
+	
+	//loop through the destination mesh
+	vector<Element*>::iterator itd;
+    	for (itd = elementsDestination.begin(); itd != elementsDestination.end(); ++itd) {
+		Point p = (*itd)->getCentroid();
+
+		Element* insideElem = NULL;
+
+		// look in the white zones
+    	        //for (its = whiteZone.begin(); its != whiteZone.end(); ++its) {
+		//      if ((*its)->isInside()) {
+		//		if (insideElem) {
+					// if the destination element centroid is inside a source element
+		//			(*itd)->setAttribute(insideElem->getAttribute());
+		//		}
+		//	}
+		//}
+
+		cout << "Destination element " << (*itd)->id << " assigned attribute " << (*itd)->getAttribute() << endl;
+	}
+	return 0;
+}
