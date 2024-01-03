@@ -38,10 +38,39 @@ class Element {
 		int attribute=0;
 };
 
+class Vector {
+	public:
+		double x=0,y=0,z=0;
+};
+
 bool isPointOnTop (Node** nodes, Point* point) {
 	// this function returns true if a point is one top of a plane
 	// | ab x ac | to find the plane normal n
+	// | ac x bd | to find the plane normal n
 	// ap . n positive means on top
+	Vector ac, bd, ap;
+	ac.x = nodes[2]->x - nodes[0]->x;
+	ac.y = nodes[2]->y - nodes[0]->y;
+	ac.z = nodes[2]->z - nodes[0]->z;
+
+	bd.x = nodes[3]->x - nodes[1]->x;
+	bd.y = nodes[3]->y - nodes[1]->y;
+	bd.z = nodes[3]->z - nodes[1]->z;
+
+	ap.x = point->x - nodes[0]->x;
+	ap.y = point->y - nodes[0]->y;
+	ap.z = point->z - nodes[0]->z;
+	
+	//ac x abd
+	Vector ac_x_bd;
+	ac_x_bd.x = ac.y * bd.z - ac.z * bd.y;
+	ac_x_bd.y = ac.z * bd.x - ac.x * bd.z;
+	ac_x_bd.z = ac.x * bd.y - ac.y * bd.x;
+	
+	//positive dot product means point is above the face, or toward the element inside
+	double dotprod = ac_x_bd.x * ap.x + ac_x_bd.y * ap.y +ac_x_bd.z * ap.z;
+	if (dotprod < 0) return false;
+
 	return true;
 };
 
@@ -134,6 +163,16 @@ class Hex: public Element {
 			if (point->z < mincoord.z) return false;
 			// if inside the coarse box do an exact check
 			// TBD use isPointOnTop and loop through element faces
+			int facemap[6][4] = {{0,1,2,3}, {1,0,4,5}, {2,1,5,6}, {3,2,6,7}, {0,3,7,4}, {7,6,5,4}};
+			for (int i=0; i < 6; i++) {
+				// loop through each face
+				Node* facenodes[4];
+				facenodes[0] = nodes[facemap[i][0]];
+				facenodes[1] = nodes[facemap[i][1]];
+				facenodes[2] = nodes[facemap[i][2]];
+				facenodes[3] = nodes[facemap[i][3]];
+				if (!isPointOnTop(facenodes,point)) return false;
+			}
 			return true; 
 		}
 };
