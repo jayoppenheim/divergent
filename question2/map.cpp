@@ -6,7 +6,7 @@ using namespace std;
 
 /************************************************************************/
 /*                                                                      */
-/*   This program maps the attibutes from a source mesh on to a         */
+/*   This program maps the attributes from a source mesh on to a         */
 /*   destination mesh.                                                  */
 /*                                                                      */
 /************************************************************************/
@@ -115,7 +115,17 @@ class Tet: public Element {
 			if (point->y < mincoord.y) return false;
 			if (point->z < mincoord.z) return false;
 			// if inside the coarse box do an exact check
-			// TBD use isPointOnTop and loop through element faces
+			// use isPointOnTop and loop through element faces
+			int facemap[4][4] = {{0,1,2,2}, {2,1,3,3}, {0,2,3,3}, {1,0,3,3}};
+			for (int i=0; i < 4; i++) {
+				// loop through each face
+				Node* facenodes[4];
+				facenodes[0] = nodes[facemap[i][0]];
+				facenodes[1] = nodes[facemap[i][1]];
+				facenodes[2] = nodes[facemap[i][2]];
+				facenodes[3] = nodes[facemap[i][3]];
+				if (!isPointOnTop(facenodes,point)) return false;
+			}
 			return true; 
 		}
 };
@@ -162,7 +172,7 @@ class Hex: public Element {
 			if (point->y < mincoord.y) return false;
 			if (point->z < mincoord.z) return false;
 			// if inside the coarse box do an exact check
-			// TBD use isPointOnTop and loop through element faces
+			// use isPointOnTop and loop through element faces
 			int facemap[6][4] = {{0,1,2,3}, {1,0,4,5}, {2,1,5,6}, {3,2,6,7}, {0,3,7,4}, {7,6,5,4}};
 			for (int i=0; i < 6; i++) {
 				// loop through each face
@@ -189,7 +199,8 @@ int main () {
 
 	//open the source file and populate source nodes and elements, with attribute
 	cout << endl << "Read the Source mesh" << endl << endl;
-	fstream file1("2brick.csv", ios::in);
+	//fstream file1("2brick.csv", ios::in);
+	fstream file1("10tet.csv", ios::in);
 	string line;
 	bool createNodes = false, createElems = false, setAttributes = false;
 	double dvalue[3];
@@ -220,10 +231,15 @@ int main () {
 			n->x = dvalue[0]; n->y = dvalue[1]; n->z = dvalue[2];
 			nodesSource.push_back(n);
 		}
-		if (createElems) { 
-			Element* e = new Hex(&nodevalue[0]); // TBD clean up later
-			e->id = elementsSource.size();
-			elementsSource.push_back(e);
+		if (createElems) {
+			if (i == 4) {
+ 				Element* e = new Tet(&nodevalue[0]); // TBD clean up later
+				e->id = elementsSource.size();
+				elementsSource.push_back(e);
+			} else if (i == 8) {
+ 				Element* e = new Hex(&nodevalue[0]); // TBD clean up later
+				e->id = elementsSource.size();
+				elementsSource.push_back(e);			}
 		}
 		if (setAttributes) { 
 			elementsSource[ivalue[0]]->setAttribute(ivalue[1]);
